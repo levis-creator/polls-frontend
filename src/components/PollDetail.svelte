@@ -4,22 +4,23 @@
   import PollStore from "../stores/PollStore";
   import PollButton from "../shared/PollButton.svelte";
   import { tweened } from "svelte/motion";
+  import axios from "axios";
 
   export let poll;
   const dispatch = createEventDispatcher();
   // reactive values
   $: totalVotes = poll.voteA + poll.voteB;
-  $: percentA = Math.floor((100 / totalVotes) * poll.voteA)||0;
-  $: percentB = Math.floor((100 / totalVotes) * poll.voteB)||0;
+  $: percentA = Math.floor((100 / totalVotes) * poll.voteA) || 0;
+  $: percentB = Math.floor((100 / totalVotes) * poll.voteB) || 0;
   //  tweened percentages
-  const tweenedA=tweened(0);
-  const tweenedB=tweened(0)
-  $:tweenedA.set(percentA)
-  $:tweenedB.set(percentB)
+  const tweenedA = tweened(0);
+  const tweenedB = tweened(0);
+  $: tweenedA.set(percentA);
+  $: tweenedB.set(percentB);
 
   //   handling votes
-  const handleVote = (option, id) => {
-    PollStore.update((currentPoll) => {
+  const handleVote = async (option, id) => {
+    await PollStore.update((currentPoll) => {
       let copiedPoll = [...currentPoll];
       let upvoted = copiedPoll.find((poll) => poll.id == id);
       if (option === "a") {
@@ -32,13 +33,17 @@
           upvoted.voteB++;
         }
       }
+      axios.put(import.meta.env.VITE_API + `/${id}`, null, {
+        params: { voteA: upvoted.voteA, voteB: upvoted.voteB },
+      });
       return copiedPoll;
     });
   };
 
   // deleting poll
-  const handleDelete = (id) => {
-    PollStore.update((currentPoll) => {
+  const handleDelete = async (id) => {
+    await PollStore.update((currentPoll) => {
+      axios.delete(import.meta.env.VITE_API + `/${id}`);
       return currentPoll.filter((poll) => poll.id != id);
     });
   };

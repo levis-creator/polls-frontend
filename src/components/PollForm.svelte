@@ -2,6 +2,8 @@
   import { createEventDispatcher } from "svelte";
   import PollButton from "../shared/PollButton.svelte";
   import PollStore from "../stores/PollStore";
+  import axios from "axios";
+  import { v4 as uuidv4 } from 'uuid';
 
   let fields = {
     question: "",
@@ -15,7 +17,7 @@
   };
   let valid = false;
   const dispatch = createEventDispatcher();
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     valid = true;
     // validate questions
     if (fields.question.trim().length < 5) {
@@ -40,12 +42,13 @@
     }
     // adding a new poll
     if(valid){
-        let poll={...fields, voteA:0, voteB:0, id:Math.random()}
+        let poll={...fields, voteA:0, voteB:0, id:uuidv4()}
         // saving data to store
         PollStore.update(currentPoll=>{
           return [poll, ...currentPoll];
         })
         dispatch("add", poll)
+        await axios.post(import.meta.env.VITE_API, poll)
     }
   };
 </script>
